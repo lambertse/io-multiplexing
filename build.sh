@@ -1,7 +1,7 @@
 #!/bin/sh
 mkdir build
 cd build
-cmake322 .. 
+cmake322 -DCMAKE_BUILD_TYPE=Debug .. 
 if [ $? -ne 0 ]; then
     echo "CMake configuration failed."
     exit 1

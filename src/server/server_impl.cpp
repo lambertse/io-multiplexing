@@ -1,12 +1,11 @@
 #include <unistd.h>
 
 #include <memory>
+#include <assert.h>
 
-#include "event_loop/config.h"
-#include "event_loop/connection_manager.h"
-#include "event_loop/poll.h"
-#include "event_loop/server_impl.h"
-#include "event_loop/shared/logging.h"
+#include "server_impl.h"
+#include "shared/logging.h"
+#include "shared/utils.h"
 
 ServerImpl::ServerImpl(ServerConfig config) : _server_fd(-1), _config(config) {
   _poll = std::make_unique<Poll>();
@@ -17,11 +16,14 @@ ServerImpl::ServerImpl(ServerConfig config) : _server_fd(-1), _config(config) {
 
 ServerImpl::~ServerImpl() {}
 
-bool ServerImpl::init() {
+bool ServerImpl::init(const ProcessRequestFunction& cb) {
+  assert(cb);
   if (!setup_socket()) {
     LOG_INFO("Failed to setup socket");
     return false;
   }
+  _connection_manager->register_processreq_funct(cb);
+
   LOG_INFO("Server is listening on port " + std::to_string(_config.port));
   _poll->set_connection_io_callback(
       std::bind(&ServerImpl::add_conection, this, std::placeholders::_1));
@@ -55,11 +57,17 @@ bool ServerImpl::stop() {
 
 bool ServerImpl::deinit() { return true; }
 
+ServerConfig ServerImpl::config(){
+    return _config; 
+}
+
 // Private section
 void ServerImpl::add_conection(int fd) {
   if (fd == _server_fd) {
+    LOG_DEBUG("Accept a connection");
     accept_new_connection();
   } else {
+    LOG_DEBUG("Handle a connection");
     handle_connection_io(fd);
   }
 }
