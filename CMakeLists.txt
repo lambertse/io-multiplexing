@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(ENABLE_TESTING OFF)
 
 # ============================================================================
@@ -82,6 +81,7 @@ endforeach()
 # Create a library for generated protobuf sources
 add_library(proto_generated STATIC ${GENERATED_PROTO_SRCS})
 target_include_directories(proto_generated PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/proto
     ${protobuf_SOURCE_DIR}/src
 )
@@ -90,14 +90,11 @@ target_link_libraries(proto_generated PUBLIC protobuf::libprotobuf)
 # ============================================================================
 # Server Executable
 # ============================================================================
-
-file(GLOB PROTO_SRCS "include/event_loop/proto/*.cc")
 file(GLOB SHARED_UTILS_SRC "src/shared/*.cpp")
 file(GLOB SERVER_SRC "src/server/*.cpp")
 file(GLOB SERVER_PLATFORM_SRC "src/server/${PLATFORM}/*.cpp")
 
 add_executable(server_${PROJECT_NAME} 
-    ${PROTO_SRCS}
     ${SHARED_UTILS_SRC}
     ${SERVER_SRC}
     ${SERVER_PLATFORM_SRC}
@@ -107,7 +104,9 @@ target_include_directories(server_${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
+# Link the proto_generated library instead of trying to glob the files
 target_link_libraries(server_${PROJECT_NAME} PRIVATE
+    proto_generated
     protobuf::libprotobuf
 )
 
@@ -120,14 +119,16 @@ set(CLIENT_SOURCES
 
 add_executable(client_${PROJECT_NAME}
     ${CLIENT_SOURCES}
-    ${PROTO_SRCS}
-    ${SHARED_UTILS_SRC})
+    ${SHARED_UTILS_SRC}
+)
 
 target_include_directories(client_${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include 
 )
 
+# Link the proto_generated library instead of trying to glob the files
 target_link_libraries(client_${PROJECT_NAME} PRIVATE
+    proto_generated
     protobuf::libprotobuf
 )
 
