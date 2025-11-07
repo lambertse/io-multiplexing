@@ -1,12 +1,10 @@
 #include <unistd.h>
+#include <assert.h>
 
-#include "event_loop/connection_manager.h"
-#include "event_loop/define.h"
-#include "event_loop/proto/request.pb.h"
-#include "event_loop/shared/logging.h"
-#include "event_loop/shared/protobuf_handler.h"
+#include "connection_manager.h"
+#include "shared/logging.h"
 
-ConnectionManager::ConnectionManager() {}
+ConnectionManager::ConnectionManager() : _procrq_cb(nullptr) {}
 
 void ConnectionManager::remove_connection(int fd) {}
 
@@ -16,6 +14,10 @@ void ConnectionManager::handle_connection_io(ConnectionSharedPtr conn) {
   } else if (conn->state == ConnectionState::RESPONSE) {
     state_response(conn);
   }
+}
+
+void ConnectionManager::register_processreq_funct(const ProcessRequestFunction& cb){
+    _procrq_cb = cb;
 }
 
 void ConnectionManager::state_request(ConnectionSharedPtr conn) {
@@ -84,6 +86,7 @@ void ConnectionManager::state_response(ConnectionSharedPtr conn) {
 }
 
 bool ConnectionManager::try_one_request(ConnectionSharedPtr conn) {
+  assert(_procrq_cb);
   if (conn->rbuf.size() < 4) {
     // Not enough data in the buffer, will retry in the next iterator
     return false;
@@ -100,25 +103,25 @@ bool ConnectionManager::try_one_request(ConnectionSharedPtr conn) {
     // Not enough data in the buffer
     return false;
   }
-  request::Request req =
-      ProtobufHandler::deserialize(conn->rbuf.substr(4, len));
-  static int count = 0;
-  LOG_INFO(std::to_string(count++) + ". Incomming message: " + req.msg());
+  Buffer requestBuffer = conn->rbuf.substr(4, len);
+  Buffer responseBuffer = _procrq_cb(requestBuffer); 
+  static int count = 1;
+  LOG_INFO(std::to_string(count++) + ". Incomming message: " + requestBuffer);
 
-  request::Response res;
-  res.set_msg("Responnse for message: " + req.msg() + " from server");
   char serializedData[k_max_msg];
-  size_t resLen = res.ByteSizeLong();
+  strcpy(serializedData, responseBuffer.c_str());
+
+  size_t resLen = responseBuffer.length();
   if (resLen > k_max_msg - 4) {
     LOG_INFO("Response too large");
     conn->state = ConnectionState::END;
     return false;
   }
-  if (!res.SerializeToArray(serializedData, resLen)) {
-    LOG_INFO("Failed to serialize response");
-    conn->state = ConnectionState::END;
-    return false;
-  }
+  // if (!res.SerializeToArray(serializedData, resLen)) {
+  //   LOG_INFO("Failed to serialize response");
+  //   conn->state = ConnectionState::END;
+  //   return false;
+  // }
 
   conn->wbuf.resize(resLen + 4);
   memcpy(&conn->wbuf[0], &resLen, 4);

@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 3.16)
-project(event_loop_cpp)
+project(io-multiplexing_cpp)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(ENABLE_TESTING OFF)
+set(ENABLE_TESTING ON)
+set(BUILD_SHARED_LIB OFF)
 
 # ============================================================================
 # Platform Detection
@@ -32,104 +33,35 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 # ============================================================================
-# Dependencies
-# ============================================================================
-include(FetchContent)
-
-# Protobuf dependency
-FetchContent_Declare(
-    protobuf
-    GIT_REPOSITORY https://github.com/protocolbuffers/protobuf.git
-    GIT_TAG        v21.12
-    GIT_SUBMODULES_RECURSE ON
-)
-
-# Configure protobuf options
-set(protobuf_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(protobuf_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(protobuf_BUILD_PROTOC_BINARIES ON CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(protobuf)
-
-# ============================================================================
-# Protobuf Code Generation
-# ============================================================================
-file(GLOB PROTO_FILES "proto/*.proto")
-set(GENERATED_PROTO_SRCS)
-set(GENERATED_PROTO_HDRS)
-
-foreach(PROTO_FILE ${PROTO_FILES})
-    get_filename_component(PROTO_NAME ${PROTO_FILE} NAME_WE)
-    set(GENERATED_SRC ${CMAKE_CURRENT_SOURCE_DIR}/include/event_loop/proto/${PROTO_NAME}.pb.cc)
-    set(GENERATED_HDR ${CMAKE_CURRENT_SOURCE_DIR}/include/event_loop/proto/${PROTO_NAME}.pb.h)
-
-    add_custom_command(
-        OUTPUT ${GENERATED_SRC} ${GENERATED_HDR}
-        COMMAND protobuf::protoc
-        ARGS --proto_path=${CMAKE_CURRENT_SOURCE_DIR}/proto
-             --cpp_out=${CMAKE_CURRENT_SOURCE_DIR}/include/event_loop/proto
-             ${PROTO_FILE}
-        DEPENDS ${PROTO_FILE} protobuf::protoc
-        COMMENT "Generating C++ code from ${PROTO_FILE}"
-        VERBATIM
-    )
-    
-    list(APPEND GENERATED_PROTO_SRCS ${GENERATED_SRC})
-    list(APPEND GENERATED_PROTO_HDRS ${GENERATED_HDR})
-endforeach()
-
-# Create a library for generated protobuf sources
-add_library(proto_generated STATIC ${GENERATED_PROTO_SRCS})
-target_include_directories(proto_generated PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/proto
-    ${protobuf_SOURCE_DIR}/src
-)
-target_link_libraries(proto_generated PUBLIC protobuf::libprotobuf)
-
-# ============================================================================
 # Server Executable
 # ============================================================================
 file(GLOB SHARED_UTILS_SRC "src/shared/*.cpp")
 file(GLOB SERVER_SRC "src/server/*.cpp")
+file(GLOB CLIENT_SRC "src/client/*.cpp")
+file(GLOB PROJ_SRC "src/*.cpp")
 file(GLOB SERVER_PLATFORM_SRC "src/server/${PLATFORM}/*.cpp")
 
-add_executable(server_${PROJECT_NAME} 
-    ${SHARED_UTILS_SRC}
-    ${SERVER_SRC}
-    ${SERVER_PLATFORM_SRC}
-)
+if(BUILD_SHARED_LIB)
+    add_library(${PROJECT_NAME} SHARED 
+        ${SERVER_SRC}
+        ${SERVER_PLATFORM_SRC}
+        ${CLIENT_SRC}
+        ${SHARED_UTILS_SRC}
+        ${PROJ_SRC}
+    )
+else()
+    add_library(${PROJECT_NAME} STATIC
+        ${SERVER_SRC}
+        ${SERVER_PLATFORM_SRC}
+        ${CLIENT_SRC}
+        ${SHARED_UTILS_SRC}
+        ${PROJ_SRC}
+    )
+endif()
 
-target_include_directories(server_${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
-
-# Link the proto_generated library instead of trying to glob the files
-target_link_libraries(server_${PROJECT_NAME} PRIVATE
-    proto_generated
-    protobuf::libprotobuf
-)
-
-# ============================================================================
-# Client Executable
-# ============================================================================
-set(CLIENT_SOURCES
-    src/client/client_main.cpp
-)
-
-add_executable(client_${PROJECT_NAME}
-    ${CLIENT_SOURCES}
-    ${SHARED_UTILS_SRC}
-)
-
-target_include_directories(client_${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/include 
-)
-
-# Link the proto_generated library instead of trying to glob the files
-target_link_libraries(client_${PROJECT_NAME} PRIVATE
-    proto_generated
-    protobuf::libprotobuf
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # ============================================================================
@@ -137,5 +69,5 @@ target_link_libraries(client_${PROJECT_NAME} PRIVATE
 # ============================================================================
 if(ENABLE_TESTING)
     enable_testing()
-    add_subdirectory(tests)
+    add_subdirectory(test)
 endif()
