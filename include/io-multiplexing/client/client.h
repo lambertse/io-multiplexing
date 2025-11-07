@@ -7,7 +7,7 @@
 
 class Client {
  public:
-  Client(ProcessResponseFunction& cb);
+  Client();
   ~Client();
 
   bool connect(const ServerConfig& server_conf);

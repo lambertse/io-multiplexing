@@ -8,10 +8,7 @@
 
 int main() {
   ServerConfig server_conf{.port = 8091};
-  ProcessResponseFunction cb = [](const Buffer &res) -> Buffer {
-    std::cout << "Got response: " << res << std::endl;
-    return "Done!";
-  };
+
   std::vector<std::thread> threads;
   // Random vector string of 20 random string:
   std::vector<std::string> random_strings = {"Hello, World!",
@@ -38,10 +35,11 @@ int main() {
   for (int i = 0; i < numClients; i++) {
     threads
         .emplace_back([&]() {
-          Client client(cb); 
+          Client client;
           client.connect(server_conf);
           Buffer response;
           client.send_request(random_strings[i], response);
+          std::cout << "Got response: " << response << std::endl;
         })
         .join();
   }

@@ -2,8 +2,8 @@
 #include "client_impl.h"
 #include <memory>
 
-Client::Client(ProcessResponseFunction &cb) {
-  _impl = std::make_shared<ClientImpl>(cb);
+Client::Client() {
+  _impl = std::make_shared<ClientImpl>();
 }
 Client::~Client() {}
 

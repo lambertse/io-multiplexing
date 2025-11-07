@@ -15,8 +15,8 @@
 #include "server/server_impl.h"
 #include "shared/logging.h"
 
-ClientImpl::ClientImpl(ProcessResponseFunction &cb)
-    : _procres_cb(cb), _status(ClientStatus::NOT_READY) {}
+ClientImpl::ClientImpl()
+    : _status(ClientStatus::NOT_READY) {}
 
 ClientImpl::~ClientImpl() {}
 
@@ -71,9 +71,6 @@ bool ClientImpl::send_request(const Buffer &request, Buffer &response) {
     LOG_DEBUG("Received");
     response = Buffer(buf);
   } while(false);
-  if(_procres_cb){
-    _procres_cb(response);
-  }
   _status = ClientStatus::READY;
   LOG_DEBUG("send_request done!");
   return ret;
@@ -91,7 +88,6 @@ bool ClientImpl::read_response(char *response) {
   if (rv < 0) {
     return false;
   }
-  LOG_INFO("Reading response with len " + std::to_string(len));
   while (len > 1) {
     rv = read(_fd, response, len);
     if (rv <= 1){

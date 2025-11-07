@@ -6,7 +6,7 @@ enum ClientStatus { NOT_READY, READY, SENDING, RECEIVING };
 
 class ClientImpl {
 public:
-  ClientImpl(ProcessResponseFunction &cb);
+  ClientImpl();
   ~ClientImpl();
 
   bool connect(const ServerConfig &server_conf);
@@ -18,7 +18,6 @@ private:
   bool send_request_internal(const Buffer &buffer);
 
 private:
-  ProcessResponseFunction _procres_cb;
   Server _server;
   int _fd;
   ClientStatus _status;

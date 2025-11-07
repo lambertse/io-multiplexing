@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(ENABLE_TESTING ON)
+set(IO_MULTIPLEXING_BUILD_TEST OFF)
 set(BUILD_SHARED_LIB OFF)
 
 # ============================================================================
