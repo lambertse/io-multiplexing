@@ -1,21 +1,15 @@
-#pragma once
+#ifndef IO_MUX_CONNECTION_MANAGER_H__
+#define IO_MUX_CONNECTION_MANAGER_H__
 
 #include "internal_define.h"
 
-class ConnectionManager {
- public:
-  explicit ConnectionManager();
-  virtual ~ConnectionManager() = default;
+typedef struct {
+  ProcessRequestFunction _procreq_cb;
+} ConnectionManager;
 
-  void remove_connection(int fd);
-  void handle_connection_io(ConnectionSharedPtr conn);
-  void register_processreq_funct(const ProcessRequestFunction& cb);
+void cm_remove_connection(ConnectionManager *cm, int fd);
+void cm_handle_connection_io(ConnectionManager *cm, Connection *conn);
+void cm_register_processreq_funct(ConnectionManager *cm,
+                                  ProcessRequestFunction cb);
 
- private:
-  bool try_one_request(ConnectionSharedPtr conn);
-  void state_request(ConnectionSharedPtr conn);
-  void state_response(ConnectionSharedPtr conn);
-
- private:
-  ProcessRequestFunction _procrq_cb;
-};
+#endif

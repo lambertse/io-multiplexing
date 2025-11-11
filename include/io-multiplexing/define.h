@@ -1,8 +1,14 @@
-#pragma once
+#ifndef IO_MUX_DEFINE_H__
+#define IO_MUX_DEFINE_H__
 
-#include <string>
-#include <functional>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-using Buffer = std::string;
+typedef char*(*ProcessRequestFunction)(const char* request, size_t req_size, size_t* res_size);
 
-using ProcessRequestFunction = std::function<Buffer(const Buffer&)>;
+#ifdef __cplusplus
+}
+#endif
+
+#endif

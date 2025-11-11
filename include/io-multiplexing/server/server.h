@@ -1,23 +1,30 @@
-#pragma once
-
-#include <memory>
+#ifndef IO_MUX_SERVER_H__
+#define IO_MUX_SERVER_H__
 
 #include "io-multiplexing/server/config.h"
 #include "io-multiplexing/define.h"
+#include <stdbool.h>
 
-class Server {
- public:
-  Server(ServerConfig config = ServerConfig::default_config());
-  ~Server();
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-  bool init(const ProcessRequestFunction& cb);
-  bool start();
-  bool stop();
-  bool deinit();
+/* Opaque pointer - forward declaration to hide implementation */
+typedef struct Server Server;
 
-  ServerConfig config() const;
+/* Constructor/Destructor equivalents */
+Server* server_create(ServerConfig config);
+void server_destroy(Server* server);
 
- private:
-  std::shared_ptr<class ServerImpl> _impl;
-};
+/* Member function equivalents */
+bool server_init(Server* server, ProcessRequestFunction cb);
+bool server_start(Server* server);
+bool server_stop(Server* server);
+bool server_deinit(Server* server);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 

@@ -1,25 +1,40 @@
-#pragma once
+#ifndef IO_MUX_INTERNAL_DEFINE_H__
+#define IO_MUX_INTERNAL_DEFINE_H__
 
-#include <map>
 #include "io-multiplexing/define.h"
+#include <unistd.h>
+#include <stdlib.h>
 
-enum ConnectionState {
+typedef enum {
   REQUEST = 0,
   RESPONSE,
   END,
-};
+} ConnectionState;
 
-struct Connection {
+#define K_MAX_MSG 1024
+typedef struct {
   int fd;
   ConnectionState state;
-  // Buffer for reading
-  Buffer rbuf;
-  // Buffer for writing
-  size_t wbuf_sent = 0;
-  Buffer wbuf;
-};
+  // char* for reading
+  char rbuf[4 + K_MAX_MSG];
+  size_t rbuf_size;
+  // char* for writing
+  size_t wbuf_sent;
+  char wbuf[4 + K_MAX_MSG];
+  size_t wbuf_size;
+} Connection;
 
-using ConnectionSharedPtr = std::shared_ptr<Connection>;
-using FDConnectionMap = std::map<int, ConnectionSharedPtr>;
+static inline Connection* create_connection(int fd) {
+  Connection* conn = (Connection*)malloc(sizeof(Connection));
+  if (conn == NULL) {
+    return NULL;  // Handle allocation failure
+  }
+  conn->fd = fd;
+  conn->state = REQUEST;
+  conn->rbuf_size = 0;
+  conn->wbuf_sent = 0;
+  conn->wbuf_size = 0;
+  return conn;
+}
 
-constexpr int k_max_msg = 1024;
+#endif

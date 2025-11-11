@@ -1,12 +1,17 @@
 cmake_minimum_required(VERSION 3.16)
-project(io-multiplexing_cpp)
+project(io-multiplexing)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# set(CMAKE_CXX_STANDARD 17)
+# set(CMAKE_CXX_EXTENSIONS OFF)
+#
+set(CMAKE_C_STANDARD 11)       # Change to C standard (C11, C99, etc.)
+set(CMAKE_C_EXTENSIONS OFF)    # Change to C_EXTENSIONS
+
+#
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(IO_MULTIPLEXING_BUILD_TEST OFF)
-set(BUILD_SHARED_LIB OFF)
+set(IO_MULTIPLEXING_BUILD_TEST ON)
+set(IO_MULTIPLEXING_BUILD_SHARED_LIB OFF)
 
 # ============================================================================
 # Platform Detection
@@ -35,13 +40,13 @@ endif()
 # ============================================================================
 # Server Executable
 # ============================================================================
-file(GLOB SHARED_UTILS_SRC "src/shared/*.cpp")
-file(GLOB SERVER_SRC "src/server/*.cpp")
-file(GLOB CLIENT_SRC "src/client/*.cpp")
-file(GLOB PROJ_SRC "src/*.cpp")
-file(GLOB SERVER_PLATFORM_SRC "src/server/${PLATFORM}/*.cpp")
+file(GLOB SHARED_UTILS_SRC "src/shared/*.c")
+file(GLOB SERVER_SRC "src/server/*.c")
+file(GLOB CLIENT_SRC "src/client/*.c")
+file(GLOB PROJ_SRC "src/*.c")
+file(GLOB SERVER_PLATFORM_SRC "src/server/${PLATFORM}/*.c")
 
-if(BUILD_SHARED_LIB)
+if(IO_MULTIPLEXING_BUILD_SHARED_LIB)
     add_library(${PROJECT_NAME} SHARED 
         ${SERVER_SRC}
         ${SERVER_PLATFORM_SRC}
@@ -67,7 +72,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # ============================================================================
 # Testing (Optional)
 # ============================================================================
-if(ENABLE_TESTING)
+if(IO_MULTIPLEXING_BUILD_TEST)
     enable_testing()
     add_subdirectory(test)
 endif()

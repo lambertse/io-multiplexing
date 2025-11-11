@@ -1,22 +1,23 @@
-#pragma once
+#ifndef IO_MUX_UTILS_H
+#define IO_MUX_UTILS_H 
+
+#include "shared/logging.h"
+#include <errno.h>
 #include <fcntl.h>
 
-#include <cerrno>
-#include <iostream>
-
-namespace utils {
-static void set_fb_nonblocking(int &fd) {
+static void set_fb_nonblocking(int fd) {
   errno = 0;
   int flags = fcntl(fd, F_GETFL, 0);
   if (errno) {
-    std::cout << "fcntl get error\n";
+    LOG_ERROR("fcntl get error\n");
     return;
   }
 
   fcntl(fd, F_SETFL, flags | O_NONBLOCK);
   if (errno) {
-    std::cout << "fcntl set error\n";
+    LOG_ERROR("fcntl set error\n");
     return;
   }
 }
-}  // namespace utils
+
+#endif

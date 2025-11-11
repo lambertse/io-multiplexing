@@ -1,21 +1,32 @@
-#pragma once
-#include <string>
+#ifndef IO_MUX_CONFIG_H__
+#define IO_MUX_CONFIG_H__
 
-struct ServerConfig {
+#include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef struct {
   int port;
   int max_connections;
   int max_message_size;
-  bool enable_logging;
-  std::string log_level;
+} ServerConfig;
 
-  static ServerConfig from_file(const std::string& config_path) {}
-  static ServerConfig default_config() {
-    static ServerConfig config;
+static inline ServerConfig server_config_default() {
+  static ServerConfig config = {8100, 100, 4096};
+  
+  if (config.port == 0) {
     config.port = 8100;
     config.max_connections = 100;
     config.max_message_size = 4096;
-    config.enable_logging = true;
-    config.log_level = "INFO";
-    return config;
   }
-};
+  
+  return config;
+}
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

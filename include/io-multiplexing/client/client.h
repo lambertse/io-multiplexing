@@ -1,20 +1,24 @@
-#pragma once
+#ifndef IO_MUX_CLIENT_H__
+#define IO_MUX_CLIENT_H__
 
-#include <memory>
-
-#include "io-multiplexing/define.h"
+#include <stdbool.h>
 #include "io-multiplexing/server/config.h"
 
-class Client {
- public:
-  Client();
-  ~Client();
+#ifdef __cplusplus
+extern "C" {
+#endif
+/* Opaque pointer - forward declaration to hide implementation */
+typedef struct Client Client;
 
-  bool connect(const ServerConfig& server_conf);
-  bool send_request(const Buffer &request, Buffer& response);
-  bool disconnect();
+Client* client_create(void);
+void client_destroy(Client* client);
 
- private:
-  std::shared_ptr<class ClientImpl> _impl;
-};
+/* Member function equivalents */
+bool client_connect(Client* client, ServerConfig* server_conf);
+char* client_send_request(Client* client, const char* request, size_t req_size, size_t* res_size);
+bool client_disconnect(Client* client);
+#ifdef __cplusplus
+}
+#endif
 
+#endif

@@ -1,25 +1,27 @@
-#pragma once
+#ifndef IO_MUX_POLL_H__
+#define IO_MUX_POLL_H__
 
-#include <functional>
+#include <stdbool.h>
 
-using ConnectionIOCallback = std::function<void(int fd)>;
+typedef void (*ConnectionIOCallback)(void *server, int fd);
+typedef struct Server Server;
 
-constexpr int MAX_EVENTS = 10;
+#define MAX_EVENTS 10
 
-class Poll {
- public:
-  Poll() = default;
-  virtual ~Poll() = default;
-  virtual bool init(int fd);
-  virtual bool start();
-  virtual bool stop();
-  virtual void add_connection(int fd);
-  virtual void remove_connection(int fd);
-
-  void set_connection_io_callback(ConnectionIOCallback cb);
-
- protected:
+typedef struct {
   ConnectionIOCallback _conn_io_cb;
-  int _poll_fd = -1;
-  bool _is_stopped = false;
-};
+  int _fd;
+  bool _is_stopped;
+  Server *server;
+} Poll;
+
+Poll *poll_create(Server *server);
+void poll_destroy(Poll *poll);
+bool poll_init(Poll *poll, int fd);
+bool poll_start(Poll *poll);
+bool poll_stop(Poll *poll);
+void poll_add_connection(Poll *poll, int fd);
+void poll_remove_connection(Poll *poll, int fd);
+void poll_set_connection_io_callback(Poll *poll, ConnectionIOCallback cb);
+
+#endif
