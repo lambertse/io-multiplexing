@@ -2,3 +2,4 @@ build/
 .cache/
 *.pb.h
 *.pb.cc
+.DS_Store
