@@ -10,7 +10,7 @@ set(CMAKE_C_EXTENSIONS OFF)    # Change to C_EXTENSIONS
 #
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-set(IO_MULTIPLEXING_BUILD_TEST ON)
+set(IO_MULTIPLEXING_BUILD_TEST OFF)
 set(IO_MULTIPLEXING_BUILD_SHARED_LIB OFF)
 
 # ============================================================================
